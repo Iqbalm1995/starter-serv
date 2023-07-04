@@ -8,6 +8,5 @@ namespace starter_serv.ViewModel
         public int StatusCode { set; get; }
         public string Message { set; get; }
         public T Data { set; get; }
-        public List<T> Error { set; get; }
     }
 }

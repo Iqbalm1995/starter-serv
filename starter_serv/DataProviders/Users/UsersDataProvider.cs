@@ -189,6 +189,34 @@ namespace starter_serv.DataProviders
             return result;
         }
 
+        public async Task<ReturnViewModel> Insert(UsrUser data)
+        {
+            ReturnViewModel result = new ReturnViewModel();
+
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+                try
+                {
+                    await _context.UsrUsers.AddAsync(data);
+
+                    await _context.SaveChangesAsync();
+
+                    transaction.Commit();
+
+                    result.Status = true;
+                }
+                catch (Exception ex)
+                {
+
+                    transaction.Rollback();
+                    result.Status = false;
+                    result.ExMessage = ex.Message;
+                }
+            }
+
+            return result;
+        }
+
         public async Task<ReturnViewModel> Update(UsrUser data)
         {
             ReturnViewModel result = new ReturnViewModel();
@@ -214,6 +242,5 @@ namespace starter_serv.DataProviders
 
             return result;
         }
-
     }
 }

@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using MySqlX.XDevAPI.Common;
+using starter_serv.BindingModel.Users;
 using starter_serv.Constant;
 using starter_serv.DataProviders;
 using starter_serv.Helper;
@@ -180,6 +182,159 @@ namespace starter_serv.BusinessProviders
             var outputData = _mapper.Map<UsersViewModel>(getUser);
 
             result.Data = outputData;
+
+            return result;
+        }
+
+        public async Task<ResponseOneDataViewModel<string>> Insert(InsertUserBindingModel data)
+        {
+            ResponseOneDataViewModel<string> result = new ResponseOneDataViewModel<string>();
+
+            UserCliamTokenViewModel userCliamTokenViewModel = _AuthenticateBusinessProviders.GetUserClaimToken();
+
+            result.StatusCode = ApplicationConstant.STATUS_CODE_CREATED;
+            result.Message = ApplicationConstant.STATUS_MSG_CREATED;
+
+            // validation user id
+            int CurrentUserID = userCliamTokenViewModel.Id != null ? int.Parse(userCliamTokenViewModel.Id) : 0;
+            var CheckCurrentUserID = await _UsersDataProvider.GetById(CurrentUserID);
+            if (CheckCurrentUserID == null)
+            {
+                result.StatusCode = ApplicationConstant.STATUS_CODE_BAD_REQUEST;
+                result.Message = $"User ID {userCliamTokenViewModel.Id} is invalid";
+
+                return result;
+            }
+
+            // validation
+            var checkEmail = await _UsersDataProvider.GetByEmail(data.Email);
+            if (checkEmail != null)
+            {
+                result.StatusCode = ApplicationConstant.STATUS_CODE_BAD_REQUEST;
+                result.Message = $"User Email {data.Email} is already exist";
+
+                return result;
+            }
+
+            UsrUser insertData = new UsrUser()
+            {
+                Name = data.Name,
+                Email = data.Email,
+                Age = data.Age,
+                Password = data.Password,
+                StatusUser = ApplicationConstant.USER_STATUS_CODE_NOT_ACTIVATE[0],
+                CreatedBy = CurrentUserID.ToString(),
+                CreatedAt = DateTimeHelper.GetCurrentDateTime(),
+                IsDeleted = ApplicationConstant.UNDELETED[0],
+
+            };
+
+            var saveData = await _UsersDataProvider.Insert(insertData);
+
+            if (saveData.Status == false)
+            {
+                result.StatusCode = ApplicationConstant.STATUS_CODE_BAD_REQUEST;
+                result.Message = saveData.ExMessage;
+
+                return result;
+            }
+
+            return result;
+        }
+
+        public async Task<ResponseOneDataViewModel<string>> Update(UpdateUserBindingModel data)
+        {
+            ResponseOneDataViewModel<string> result = new ResponseOneDataViewModel<string>();
+
+            UserCliamTokenViewModel userCliamTokenViewModel = _AuthenticateBusinessProviders.GetUserClaimToken();
+
+            result.StatusCode = ApplicationConstant.STATUS_CODE_OK;
+            result.Message = ApplicationConstant.STATUS_MSG_OK;
+
+            // validation user id
+            int CurrentUserID = userCliamTokenViewModel.Id != null ? int.Parse(userCliamTokenViewModel.Id) : 0;
+            var CheckCurrentUserID = await _UsersDataProvider.GetById(CurrentUserID);
+            if (CheckCurrentUserID == null)
+            {
+                result.StatusCode = ApplicationConstant.STATUS_CODE_BAD_REQUEST;
+                result.Message = $"User ID {userCliamTokenViewModel.Id} is invalid";
+
+                return result;
+            }
+
+            // validation
+            var checkUserEdit = await _UsersDataProvider.GetById(data.Id);
+            if (checkUserEdit == null)
+            {
+                result.StatusCode = ApplicationConstant.STATUS_CODE_BAD_REQUEST;
+                result.Message = $"User Edit ID {data.Id} is invalid";
+
+                return result;
+            }
+
+            // update data
+            checkUserEdit.Name = data.Name;
+            checkUserEdit.Age = data.Age;
+            checkUserEdit.UpdatedBy = CurrentUserID.ToString();
+            checkUserEdit.UpdatedAt = DateTimeHelper.GetCurrentDateTime();
+
+            var saveData = await _UsersDataProvider.Update(checkUserEdit);
+
+            if (saveData.Status == false)
+            {
+                result.StatusCode = ApplicationConstant.STATUS_CODE_BAD_REQUEST;
+                result.Message = saveData.ExMessage;
+
+                return result;
+            }
+
+            return result;
+        }
+
+        public async Task<ResponseOneDataViewModel<string>> Delete(int id)
+        {
+            ResponseOneDataViewModel<string> result = new ResponseOneDataViewModel<string>();
+
+            UserCliamTokenViewModel userCliamTokenViewModel = _AuthenticateBusinessProviders.GetUserClaimToken();
+
+            result.StatusCode = ApplicationConstant.STATUS_CODE_OK;
+            result.Message = ApplicationConstant.STATUS_MSG_DELETED;
+
+            // validation user id
+            int CurrentUserID = userCliamTokenViewModel.Id != null ? int.Parse(userCliamTokenViewModel.Id) : 0;
+            var CheckCurrentUserID = await _UsersDataProvider.GetById(CurrentUserID);
+            if (CheckCurrentUserID == null)
+            {
+                result.StatusCode = ApplicationConstant.STATUS_CODE_BAD_REQUEST;
+                result.Message = $"User ID {userCliamTokenViewModel.Id} is invalid";
+
+                return result;
+            }
+
+            // validation
+            var checkUserEdit = await _UsersDataProvider.GetById(id);
+            if (checkUserEdit == null)
+            {
+                result.StatusCode = ApplicationConstant.STATUS_CODE_BAD_REQUEST;
+                result.Message = $"User Edit ID {id} is invalid";
+
+                return result;
+            }
+
+            // update data
+            checkUserEdit.UpdatedBy = CurrentUserID.ToString();
+            checkUserEdit.UpdatedAt = DateTimeHelper.GetCurrentDateTime();
+            checkUserEdit.IsDeleted = ApplicationConstant.DELETED[0];
+
+            var saveData = await _UsersDataProvider.Update(checkUserEdit);
+
+            if (saveData.Status == false)
+            {
+                result.StatusCode = ApplicationConstant.STATUS_CODE_BAD_REQUEST;
+                result.Message = saveData.ExMessage;
+
+                return result;
+            }
 
             return result;
         }

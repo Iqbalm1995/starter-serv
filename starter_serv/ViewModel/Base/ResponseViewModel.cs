@@ -10,6 +10,5 @@ namespace starter_serv.ViewModel
         public int Count { set; get; }
         public int CountTotal { set; get; }
         public List<T> Data { set; get; }
-        public List<T> Error { set; get; }
     }
 }

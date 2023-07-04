@@ -13,6 +13,7 @@ namespace starter_serv.DataProviders
         public Task<UsrUser> GetByEmail(string email);
         public Task<ListPagedResults<UsrUser>> QueryPagedList(QueryPagedFilterModel filter);
         public Task<string> AvatarWriteFile(IFormFile file);
+        public Task<ReturnViewModel> Insert(UsrUser data);
         public Task<ReturnViewModel> Update(UsrUser data);
     }
 }

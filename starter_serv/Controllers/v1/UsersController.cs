@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using starter_serv.BindingModel.Users;
 using starter_serv.BusinessProviders;
 using starter_serv.Constant;
 using starter_serv.Model;
@@ -14,12 +15,12 @@ namespace starter_serv.Controllers.v1
     [ApiController]
     public class UsersController : ControllerBase
     {
-        private readonly IUsersBusinessProviders _UsersBusinessProvider;
+        private readonly IUsersBusinessProviders _BusinessProviders;
 
         [ExcludeFromCodeCoverage]
         public UsersController(IUsersBusinessProviders usersBusinessProvider)
         {
-            _UsersBusinessProvider = usersBusinessProvider ?? throw new ArgumentNullException(nameof(usersBusinessProvider));
+            _BusinessProviders = usersBusinessProvider ?? throw new ArgumentNullException(nameof(usersBusinessProvider));
         }
 
         [HttpPost(template: "GetPagedList")]
@@ -29,7 +30,7 @@ namespace starter_serv.Controllers.v1
             ResponseViewModel<UsersViewModel> response = new ResponseViewModel<UsersViewModel>();
             try
             {
-                response = await _UsersBusinessProvider.GetList(request);
+                response = await _BusinessProviders.GetList(request);
             }
             catch (Exception ex)
             {
@@ -50,7 +51,7 @@ namespace starter_serv.Controllers.v1
             ResponseOneDataViewModel<UsersViewModel> response = new ResponseOneDataViewModel<UsersViewModel>();
             try
             {
-                response = await _UsersBusinessProvider.GetById(id);
+                response = await _BusinessProviders.GetById(id);
             }
             catch (Exception ex)
             {
@@ -67,7 +68,70 @@ namespace starter_serv.Controllers.v1
             ResponseOneDataViewModel<UsersViewModel> response = new ResponseOneDataViewModel<UsersViewModel>();
             try
             {
-                response = await _UsersBusinessProvider.UpdateAvatar(UserId, FileUpload);
+                response = await _BusinessProviders.UpdateAvatar(UserId, FileUpload);
+            }
+            catch (Exception ex)
+            {
+                response.StatusCode = ApplicationConstant.STATUS_CODE_ERROR;
+                response.Message = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    response.Message = ex.InnerException.Message;
+                }
+            }
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpPost(template: "Insert")]
+        [ProducesResponseType(200, Type = typeof(ResponseOneDataViewModel<string>))]
+        public async Task<IActionResult> Insert([FromBody] InsertUserBindingModel data)
+        {
+            ResponseOneDataViewModel<string> response = new ResponseOneDataViewModel<string>();
+            try
+            {
+                response = await _BusinessProviders.Insert(data);
+            }
+            catch (Exception ex)
+            {
+                response.StatusCode = ApplicationConstant.STATUS_CODE_ERROR;
+                response.Message = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    response.Message = ex.InnerException.Message;
+                }
+            }
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpPatch(template: "Update")]
+        [ProducesResponseType(200, Type = typeof(ResponseOneDataViewModel<string>))]
+        public async Task<IActionResult> Update([FromBody] UpdateUserBindingModel data)
+        {
+            ResponseOneDataViewModel<string> response = new ResponseOneDataViewModel<string>();
+            try
+            {
+                response = await _BusinessProviders.Update(data);
+            }
+            catch (Exception ex)
+            {
+                response.StatusCode = ApplicationConstant.STATUS_CODE_ERROR;
+                response.Message = ex.Message;
+                if (ex.InnerException != null)
+                {
+                    response.Message = ex.InnerException.Message;
+                }
+            }
+            return StatusCode(response.StatusCode, response);
+        }
+
+        [HttpDelete(template: "Delete/{UserId}")]
+        [ProducesResponseType(200, Type = typeof(ResponseOneDataViewModel<string>))]
+        public async Task<IActionResult> Delete(Int32 UserId)
+        {
+            ResponseOneDataViewModel<string> response = new ResponseOneDataViewModel<string>();
+            try
+            {
+                response = await _BusinessProviders.Delete(UserId);
             }
             catch (Exception ex)
             {
